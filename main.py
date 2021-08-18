@@ -38,9 +38,9 @@ def run_test(test_name, model, criterion, optimizer, lr_scheduler, train_dataloa
         epochs=epochs,
         notebook=notebook)
     train_loss, val_loss, _ = trainer.run_trainer()
-    output_dir = os.path.join(OUTPUT_DIR, test_name)
-    os.mkdir(output_dir)
-    save_data(os.path.join(output_dir, "results.cv"), train_loss, val_loss)
+    output_dir = os.path.join(outdir, test_name)
+    os.makedirs(output_dir, exist_ok=True)
+    save_data(os.path.join(output_dir, "results.csv"), train_loss, val_loss)
 
 
 if __name__ == '__main__':
