@@ -108,4 +108,4 @@ class QuantizationBlob:
             img = cv2.blur(img, ksize=(self.blur_kernel_size, self.blur_kernel_size))
 
         final_img = self._quantize_image(sample, used_colors)
-        return self.to_tensor(final_img)
+        return torch.Tensor(final_img).permute(2, 0, 1)
