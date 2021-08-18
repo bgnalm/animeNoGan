@@ -67,7 +67,7 @@ class Trainer:
 
         self.model.train()  # train mode
         train_losses = []  # accumulate the losses here
-        batch_iter = tqdm(enumerate(self.train_dataloader), 'Training', total=len(self.tr),
+        batch_iter = tqdm(enumerate(self.train_dataloader), 'Training', total=len(self.train_dataloader),
                           leave=False)
 
         for i, (x, y) in batch_iter:
