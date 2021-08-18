@@ -20,8 +20,8 @@ class Trainer:
         self.criterion = criterion
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
-        self.training_DataLoader = train_dataloader
-        self.validation_DataLoader = val_dataloader
+        self.train_dataloader = train_dataloader
+        self.val_dataloader = val_dataloader
         self.device = device
         self.epochs = epochs
         self.epoch = epoch
@@ -47,12 +47,12 @@ class Trainer:
             self._train()
 
             """Validation block"""
-            if self.validation_DataLoader is not None:
+            if self.val_dataloader is not None:
                 self._validate()
 
             """Learning rate scheduler block"""
             if self.lr_scheduler is not None:
-                if self.validation_DataLoader is not None and self.lr_scheduler.__class__.__name__ == 'ReduceLROnPlateau':
+                if self.val_dataloader is not None and self.lr_scheduler.__class__.__name__ == 'ReduceLROnPlateau':
                     self.lr_scheduler.batch(self.validation_loss[i])  # learning rate scheduler step with validation loss
                 else:
                     self.lr_scheduler.batch()  # learning rate scheduler step
@@ -67,7 +67,7 @@ class Trainer:
 
         self.model.train()  # train mode
         train_losses = []  # accumulate the losses here
-        batch_iter = tqdm(enumerate(self.training_DataLoader), 'Training', total=len(self.training_DataLoader),
+        batch_iter = tqdm(enumerate(self.train_dataloader), 'Training', total=len(self.tr),
                           leave=False)
 
         for i, (x, y) in batch_iter:
@@ -96,7 +96,7 @@ class Trainer:
 
         self.model.eval()  # evaluation mode
         valid_losses = []  # accumulate the losses here
-        batch_iter = tqdm(enumerate(self.validation_DataLoader), 'Validation', total=len(self.validation_DataLoader),
+        batch_iter = tqdm(enumerate(self.val_dataloader), 'Validation', total=len(self.val_dataloader),
                           leave=False)
 
         for i, (x, y) in batch_iter:
