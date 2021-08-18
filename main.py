@@ -7,6 +7,7 @@ import dataset
 import train
 import csv
 import os
+import time
 
 
 def save_data(filepath, train_loss, val_loss):
@@ -25,7 +26,7 @@ def save_data(filepath, train_loss, val_loss):
 OUTPUT_DIR = os.curdir
 
 
-def run_test(test_name, model, criterion, optimizer, lr_scheduler, train_dataloader, val_dataloader, epochs,  initial_transform=None, notebook=True, outdir=OUTPUT_DIR):
+def run_test(test_name, model, criterion, optimizer, lr_scheduler, train_dataloader, val_dataloader, epochs, initial_transform=None, notebook=True, outdir=OUTPUT_DIR):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     trainer = train.Trainer(
         model=model,
@@ -41,6 +42,7 @@ def run_test(test_name, model, criterion, optimizer, lr_scheduler, train_dataloa
     train_loss, val_loss, _ = trainer.run_trainer()
     os.makedirs(output_dir, exist_ok=True)
     save_data(os.path.join(output_dir, "results.csv"), train_loss, val_loss)
+    torch.save(model.state_dict(), os.path.join(output_dir, f"model_{time.strftime('%Y_%m_%d-%H_%M.pth')}"))
     trainer.calculate_example_images(output_dir, initial_transform)
 
 
