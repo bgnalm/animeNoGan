@@ -2,12 +2,14 @@ import cv2
 import time
 
 import matplotlib.pyplot as plt
+import torch
 from sklearn.cluster import KMeans
 import numpy as np
 import random
 import PIL.ImageDraw as ImageDraw
 import PIL.Image as Image
 import random
+import torchvision.transforms
 
 
 class ShapeAverager:
@@ -94,11 +96,16 @@ class QuantizationBlob:
         self.blurs = blurs
         self.blur_kernel_size = blur_kernel_size
         self.color_removal_percentage = color_removal_percentage
+        self.to_tensor = torchvision.transforms.PILToTensor()
 
     def __call__(self, sample):
         colors = self.MS_PAINT_COLORS
         used_colors = [color for color in colors if random.random() > self.color_removal_percentage]
+        img = sample
+        if type(sample) == torch.Tensor:
+            img = img.permute(1, 2, 0).numpy()
         for i in range(self.blurs):
-            sample = cv2.blur(sample, ksize=(self.blur_kernel_size, self.blur_kernel_size))
+            img = cv2.blur(img, ksize=(self.blur_kernel_size, self.blur_kernel_size))
 
-        return self._quantize_image(sample, used_colors)
+        final_img = self._quantize_image(sample, used_colors)
+        return self.to_tensor(final_img)

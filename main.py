@@ -46,24 +46,45 @@ def run_test(test_name, model, criterion, optimizer, lr_scheduler, train_dataloa
     trainer.calculate_example_images(output_dir, initial_transform)
 
 
+train_episodes = [
+  './dragon ball/EP.70.480p.mp4',
+  './dragon ball/EP.71.v0.480p.mp4',
+  './dragon ball/EP.72.480p.mp4',
+  './dragon ball/EP.74.480p.mp4',
+  './dragon ball/EP.78.720p.mp4',
+  './dragon ball/EP.80.480p.mp4',
+  './dragon ball/EP.81.480p.mp4',
+  './dragon ball/EP.85.480p.mp4',
+  './dragon ball/EP.86.v0.480p.mp4',
+  './dragon ball/EP.87.480p.mp4',
+  './dragon ball/EP.96.v0.480p.mp4',
+  './dragon ball/EP.98.v0.480p.mp4',
+]
+
+val_episode = [
+  './dragon ball/EP.73.480p.mp4',
+]
+
 if __name__ == '__main__':
     model = models.get_model()
-    video_dataset = dataset.VideoDataset(
-        './dragon ball/EP.70.480p.mp4',
-        initial_transform=transforms.Compose([transforms.CenterCrop(224), transforms.ToTensor()]),
-        information_loss_transform=transforms.Compose([])
-    )
+    initial_transform = transforms.Compose([transforms.Resize((336,336)), transforms.ToTensor()])
+    info_loss_transform = preprocessing.QuantizationBlob()
+    train_dataset = dataset.build_video_datasets(train_episodes, initial_transform, info_loss_transform, skip_factor=15)
+    val_dataset = dataset.build_video_datasets(val_episode, initial_transforms=initial_transform,
+                                               info_loss_transforms=info_loss_transform, skip_factor=15)
 
     run_test(
-        test_name="vanilla",
+        test_name="example",
         model=model,
         criterion=torch.nn.L1Loss(),
         optimizer=torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9),
-        train_dataloader= DataLoader(video_dataset, batch_size=4, shuffle=False),
-        val_dataloader=None,
+        train_dataloader=DataLoader(train_dataset, batch_size=4, shuffle=False),
+        val_dataloader=DataLoader(val_dataset, batch_size=4, shuffle=False),
         lr_scheduler=None,
-        epochs=3,
-        notebook=False
+        epochs=10,
+        initial_transform=initial_transform,
+        notebook=False,
+        outdir=OUTPUT_DIR
     )
 
 
