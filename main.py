@@ -10,7 +10,7 @@ import os
 
 
 def save_data(filepath, train_loss, val_loss):
-    with open(filepath, 'w') as f:
+    with open(filepath, 'a') as f:
         writer = csv.DictWriter(f, fieldnames=['epoch', 'train_loss', 'val_loss'])
         writer.writeheader()
         for i in range(len(train_loss)):
@@ -25,7 +25,7 @@ def save_data(filepath, train_loss, val_loss):
 OUTPUT_DIR = os.curdir
 
 
-def run_test(test_name, model, criterion, optimizer, lr_scheduler, train_dataloader, val_dataloader, epochs, notebook=True, outdir=OUTPUT_DIR):
+def run_test(test_name, model, criterion, optimizer, lr_scheduler, train_dataloader, val_dataloader, epochs,  initial_transform=None, notebook=True, outdir=OUTPUT_DIR):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     trainer = train.Trainer(
         model=model,
@@ -37,10 +37,11 @@ def run_test(test_name, model, criterion, optimizer, lr_scheduler, train_dataloa
         val_dataloader=val_dataloader,
         epochs=epochs,
         notebook=notebook)
-    train_loss, val_loss, _ = trainer.run_trainer()
     output_dir = os.path.join(outdir, test_name)
+    train_loss, val_loss, _ = trainer.run_trainer()
     os.makedirs(output_dir, exist_ok=True)
     save_data(os.path.join(output_dir, "results.csv"), train_loss, val_loss)
+    trainer.calculate_example_images(output_dir, initial_transform)
 
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@ import cv2
 import os
 from PIL import Image
 
+
 class VideoDataset(Dataset):
 
     def _restart_video(self):
@@ -34,3 +35,19 @@ class VideoDataset(Dataset):
         input_frame = self.initial_transform(frame)
         output_frame = self.information_loss_transform(input_frame)
         return input_frame, output_frame
+
+
+class ExampleImagesDataset(Dataset):
+
+    def __init__(self, initial_transform):
+        self.initial_transform = initial_transform
+        self.files = os.listdir('./example_images/')
+
+    def __len__(self):
+        return len(self.files)
+
+    def __getitem__(self, idx):
+        frame = Image.open(os.path.join('example_images'), self.files[idx])
+        return self.initial_transform(frame), self.files[idx]
+
+

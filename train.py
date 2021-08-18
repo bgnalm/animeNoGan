@@ -1,6 +1,8 @@
 import numpy as np
 import torch
-
+import dataset
+import os
+from PIL import Image
 
 class Trainer:
     def __init__(self,
@@ -113,3 +115,21 @@ class Trainer:
         self.validation_loss.append(np.mean(valid_losses))
 
         batch_iter.close()
+
+    def calculate_example_images(self, outdir, initial_transform):
+        d = dataset.ExampleImagesDataset(initial_transform)
+        self.model.eval()  # evaluation mode
+        valid_losses = []  # accumulate the losses here
+
+
+        for i, (x, y) in enumerate(d):
+            input, target = x.to(self.device), y  # send to device (GPU or CPU)
+            with torch.no_grad():
+                out = self.model(input)
+                array = np.array(out)
+                img = Image.fromarray(array)
+                img.save(os.path.join(outdir, target))
+
+
+
+
