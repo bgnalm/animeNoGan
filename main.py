@@ -49,7 +49,7 @@ def run_test(test_name, model, criterion, optimizer, lr_scheduler, train_dataloa
 if __name__ == '__main__':
     model = models.get_model()
     video_dataset = dataset.VideoDataset(
-        '../dragon ball/EP.70.480p.mp4',
+        './dragon ball/EP.70.480p.mp4',
         initial_transform=transforms.Compose([transforms.CenterCrop(224), transforms.ToTensor()]),
         information_loss_transform=transforms.Compose([])
     )

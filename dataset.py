@@ -1,4 +1,4 @@
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
 import cv2
 import os
 from PIL import Image
@@ -35,6 +35,11 @@ class VideoDataset(Dataset):
         input_frame = self.initial_transform(frame)
         output_frame = self.information_loss_transform(input_frame)
         return input_frame, output_frame
+
+
+def build_video_datasets(videos, initial_transforms, info_loss_transforms, skip_factor=None):
+    all_datasets = [VideoDataset(vid, initial_transforms, info_loss_transforms, skip_factor) for vid in videos]
+    return ConcatDataset(all_datasets)
 
 
 class ExampleImagesDataset(Dataset):
