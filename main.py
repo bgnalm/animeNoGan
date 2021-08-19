@@ -67,7 +67,7 @@ val_episode = [
 
 if __name__ == '__main__':
     model = models.get_model()
-    initial_transform = transforms.Compose([transforms.Resize((336,336)), transforms.ToTensor()])
+    initial_transform = transforms.Compose([transforms.Resize((224,224)), transforms.ToTensor()])
     info_loss_transform = preprocessing.QuantizationBlob()
     train_dataset = dataset.build_video_datasets(train_episodes, initial_transform, info_loss_transform, skip_factor=15)
     val_dataset = dataset.build_video_datasets(val_episode, initial_transforms=initial_transform,
