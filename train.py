@@ -116,8 +116,8 @@ class Trainer:
 
         batch_iter.close()
 
-    def calculate_example_images(self, outdir, initial_transform):
-        d = dataset.ExampleImagesDataset(initial_transform)
+    def calculate_example_images(self, outdir, global_transform):
+        d = dataset.ExampleImagesDataset(global_transform)
         self.model.eval()  # evaluation mode
         valid_losses = []  # accumulate the losses here
 

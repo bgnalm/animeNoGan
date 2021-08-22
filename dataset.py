@@ -42,6 +42,46 @@ def build_video_datasets(videos, initial_transforms, info_loss_transforms, skip_
     return ConcatDataset(all_datasets)
 
 
+class ImageCoupleDataset(Dataset):
+
+    def __init__(self, image_dir, gt_dir, transforms, random_transforms=None):
+        self.image_dir = image_dir
+        self.gt_dir = gt_dir
+        self.number_of_images = len(os.listdir(image_dir))
+        self.transforms = transforms
+        self.random_transforms = random_transforms
+
+    def __len__(self):
+        return self.number_of_images
+
+    def __getitem__(self, idx):
+        train_image = Image.open(os.path.join(self.image_dir, f'{idx}.jpg'))
+        gt_image = Image.open(os.path.join(self.gt_dir, f'{idx}.jpg'))
+        train_image = self.transforms(train_image)
+        gt_image = self.transforms(gt_image)
+        if self.random_transforms is not None:
+            train_image, gt_image = self.random_transforms(train_image, gt_image)
+
+        return train_image, gt_image
+
+
+def build_image_couple_dataset(transforms, random_transforms):
+    train = ImageCoupleDataset(
+        os.path.join('dragon_ball_preprocessed', 'train'),
+        os.path.join('dragon_ball_gt', 'train'),
+        transforms=transforms,
+        random_transforms=random_transforms
+    )
+
+    val = ImageCoupleDataset(
+        os.path.join('dragon_ball_preprocessed', 'val'),
+        os.path.join('dragon_ball_gt', 'val'),
+        transforms=transforms
+    )
+
+    return train, val
+
+
 class ExampleImagesDataset(Dataset):
 
     def __init__(self, initial_transform):

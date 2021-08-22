@@ -2,6 +2,7 @@ import torch
 import models
 import preprocessing
 import torchvision.transforms as transforms
+import random_transforms
 from torch.utils.data import Dataset, DataLoader
 import dataset
 import train
@@ -26,7 +27,7 @@ def save_data(filepath, train_loss, val_loss):
 OUTPUT_DIR = os.curdir
 
 
-def run_test(test_name, model, criterion, optimizer, lr_scheduler, train_dataloader, val_dataloader, epochs, initial_transform=None, notebook=True, outdir=OUTPUT_DIR):
+def run_test(test_name, model, criterion, optimizer, lr_scheduler, train_dataloader, val_dataloader, epochs, global_transform=None, notebook=True, outdir=OUTPUT_DIR):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     trainer = train.Trainer(
         model=model,
@@ -43,7 +44,7 @@ def run_test(test_name, model, criterion, optimizer, lr_scheduler, train_dataloa
     os.makedirs(output_dir, exist_ok=True)
     save_data(os.path.join(output_dir, "results.csv"), train_loss, val_loss)
     torch.save(model.state_dict(), os.path.join(output_dir, f"model_{time.strftime('%Y_%m_%d-%H_%M.pth')}"))
-    trainer.calculate_example_images(output_dir, initial_transform)
+    trainer.calculate_example_images(output_dir, global_transform)
 
 
 train_episodes = [
@@ -66,23 +67,20 @@ val_episode = [
 ]
 
 if __name__ == '__main__':
-    model = models.get_model()
-    initial_transform = transforms.Compose([transforms.Resize((224,224)), transforms.ToTensor()])
-    info_loss_transform = preprocessing.QuantizationBlob()
-    train_dataset = dataset.build_video_datasets(train_episodes, initial_transform, info_loss_transform, skip_factor=15)
-    val_dataset = dataset.build_video_datasets(val_episode, initial_transforms=initial_transform,
-                                               info_loss_transforms=info_loss_transform, skip_factor=15)
-
+    model = models.get_model('resnet34')
+    global_transforms = transforms.Compose([transforms.ToTensor()])
+    random_trans = random_transforms.RandomTransform(flip=0.5, rotate=0.0, color_jitter=False)
+    train_dataset, val_dataset = dataset.build_image_couple_dataset(global_transforms, random_trans)
     run_test(
         test_name="example",
         model=model,
         criterion=torch.nn.L1Loss(),
         optimizer=torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9),
-        train_dataloader=DataLoader(train_dataset, batch_size=4, shuffle=False),
-        val_dataloader=DataLoader(val_dataset, batch_size=4, shuffle=False),
+        train_dataloader=DataLoader(train_dataset, batch_size=4, shuffle=True),
+        val_dataloader=DataLoader(val_dataset, batch_size=4, shuffle=True),
         lr_scheduler=None,
+        global_transform=global_transforms,
         epochs=10,
-        initial_transform=initial_transform,
         notebook=False,
         outdir=OUTPUT_DIR
     )
