@@ -92,7 +92,8 @@ class ExampleImagesDataset(Dataset):
         return len(self.files)
 
     def __getitem__(self, idx):
-        frame = Image.open(os.path.join('example_images'), self.files[idx])
+        frame = Image.open(os.path.join('./example_images', self.files[idx]))
+        frame = frame.convert('RGB')
         return self.initial_transform(frame), self.files[idx]
 
 

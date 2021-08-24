@@ -119,15 +119,17 @@ class Trainer:
     def calculate_example_images(self, outdir, global_transform):
         d = dataset.ExampleImagesDataset(global_transform)
         self.model.eval()  # evaluation mode
-        valid_losses = []  # accumulate the losses here
-
 
         for i, (x, y) in enumerate(d):
             input, target = x.to(self.device), y  # send to device (GPU or CPU)
             with torch.no_grad():
-                out = self.model(input)
-                array = np.array(out)
-                img = Image.fromarray(array)
+                new_input = input.reshape(1, *input.shape)
+                out = self.model(new_input)
+                out = out.permute(0, 2, 3, 1)
+                array = np.array(out.cpu())
+                out_image = array[0]
+                out_image = (out_image * 255.0).astype('uint8')
+                img = Image.fromarray(out_image)
                 img.save(os.path.join(outdir, target))
 
 
