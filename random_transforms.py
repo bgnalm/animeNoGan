@@ -4,7 +4,7 @@ import random
 
 class RandomTransform:
 
-    def __init__(self, flip=0.5, rotate=0.2, color_jitter=False, blur_operations_avg=0.5, return_gt_image_percent=0.05):
+    def __init__(self, flip=0.5, rotate=0.2, color_jitter=False, blur_operations_avg=0.0, return_gt_image_percent=0.00):
         self.flip = flip
         self.rotate = rotate
         self.jitter_transform = ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2)
