@@ -25,6 +25,8 @@ class EdgeLoss(torch.nn.Module):
         ])
 
         self.laplacian = self.laplacian.view(1,3,3,3)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.laplacian = self.laplacian.to(device)
 
     def forward(self, inputs, targets):
         input_laplacian = torch.nn.functional.conv2d(inputs, self.laplacian)
