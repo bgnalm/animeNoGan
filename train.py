@@ -116,7 +116,18 @@ class Trainer:
 
         batch_iter.close()
 
-    def calculate_example_images(self, outdir, global_transform):
+
+    def _unnormalize_output_image(self, img):
+        # assuming x and y are Batch x 3 x H x W and mean = (0.4914, 0.4822, 0.4465), std = (0.2023, 0.1994, 0.2010)
+        mean = [0.49031248, 0.5466465, 0.48358064]
+        std = [0.25759599, 0.23144381, 0.25116349]
+        x = img.new(*img.size())
+        x[:, 0, :, :] = img[:, 0, :, :] * std[0] + mean[0]
+        x[:, 1, :, :] = img[:, 1, :, :] * std[1] + mean[1]
+        x[:, 2, :, :] = img[:, 2, :, :] * std[2] + mean[2]
+        return x
+
+    def calculate_example_images(self, outdir, global_transform, unnormalize=False):
         d = dataset.ExampleImagesDataset(global_transform)
         self.model.eval()  # evaluation mode
 
@@ -125,8 +136,10 @@ class Trainer:
             with torch.no_grad():
                 new_input = input.reshape(1, *input.shape)
                 out = self.model(new_input)
-                out = out.permute(0, 2, 3, 1)
-                array = np.array(out.cpu())
+                out_cpu = out.cpu()
+                out_normalized = self._unnormalize_output_image(out_cpu)
+                out_normalized = out_normalized.permute(0, 2, 3, 1)
+                array = np.array(out_normalized)
                 out_image = array[0]
                 out_image = (out_image * 255.0).astype('uint8')
                 img = Image.fromarray(out_image)
