@@ -1,12 +1,52 @@
 import numpy as np
+import torch
 import torchvision.transforms.functional as tf
 from torchvision.transforms import ColorJitter, GaussianBlur, RandomErasing
+from skimage.transform import PiecewiseAffineTransform, warp
 import random
+
 
 class RandomTransform:
 
+    def _grid_sample(self, tensor_image):
+        # get random movement
+        image_size = tensor_image.shape[1]
+        interpolation_points = 10
+        changed_vectors = torch.normal(mean=0, std=0.1, size=(interpolation_points-1, interpolation_points-1, 2))
+
+        # Create linear grid
+        d = torch.linspace(-1, 1, interpolation_points)
+        meshx, meshy = torch.meshgrid((d, d))
+        grid = torch.stack((meshy, meshx), 2)
+
+        grid[0:-1, 0:-1, :] += changed_vectors
+        grid = grid.unsqueeze(0)  # add batch dim
+
+        output = torch.nn.functional.grid_sample(tensor_image.unsqueeze(0), grid, align_corners=False)
+        return output[0]
+
+    def _piecewise_affine(self, tensor_image, interpolation_points=20, std=5.0):
+        # covert to numpy
+        image = tensor_image.permute(1, 2, 0).numpy()
+        rows, cols = image.shape[0], image.shape[1]
+
+        src_cols = np.linspace(0, cols, interpolation_points)
+        src_rows = np.linspace(0, rows, interpolation_points)
+        src_rows, src_cols = np.meshgrid(src_rows, src_cols)
+        src = np.dstack([src_cols.flat, src_rows.flat])[0]
+
+        dst = src + np.random.normal(0, std, src.shape)
+        tform = PiecewiseAffineTransform()
+        tform.estimate(src, dst)
+        out = warp(image, tform, output_shape=(rows, cols))
+
+        # convert to tensor
+        return torch.tensor(out).permute(2, 0, 1)
+
+
+
     def __init__(self, flip=0.5, rotate=0.2, color_jitter=False, blur_operations_avg=0.0, return_gt_image_percent=0.00,
-                 number_of_random_erases=0, erase_random_pixel_color=False):
+                 number_of_random_erases=0, erase_random_pixel_color=False, apply_deformation=False, deformation_points=13, deformation_std=8.0):
         self.flip = flip
         self.rotate = rotate
         self.jitter_transform = ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2)
@@ -16,9 +56,14 @@ class RandomTransform:
         self.blur_operations_avg = blur_operations_avg
         self.number_of_random_erases = number_of_random_erases
         self.random_erase = RandomErasing(p=0.5, value='random' if erase_random_pixel_color else 0)
+        self.apply_deformation = apply_deformation
+        self.deformation_points = deformation_points
+        self.deformation_std = deformation_std
 
 
     def __call__(self, img, gt_img):
+        if self.apply_deformation:
+            img = self._piecewise_affine(img, self.deformation_points, self.deformation_std)
         if random.random() > self.flip:
             img = tf.hflip(img)
             gt_img = tf.hflip(gt_img)
