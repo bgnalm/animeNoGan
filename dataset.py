@@ -69,12 +69,13 @@ class ImageCoupleDataset(Dataset):
         return train_image, gt_image
 
 
-def build_image_couple_dataset(transforms, random_transforms, x_dir='dragon_ball_preprocessed', y_dir='dragon_ball_gt'):
+def build_image_couple_dataset(transforms, random_transforms, initial_transform=None, x_dir='dragon_ball_preprocessed', y_dir='dragon_ball_gt'):
     train = ImageCoupleDataset(
         os.path.join(x_dir, 'train'),
         os.path.join(y_dir, 'train'),
         transforms=transforms,
-        random_transforms=random_transforms
+        random_transforms=random_transforms,
+        initial_transform=initial_transform
     )
 
     val = ImageCoupleDataset(
