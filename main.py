@@ -69,8 +69,8 @@ val_episode = [
 if __name__ == '__main__':
     model = models.get_model('resnet34')
     global_transforms = transforms.Compose([transforms.ToTensor()])
-    random_trans = random_transforms.RandomTransform(flip=0.5, rotate=0.0, color_jitter=False, apply_deformation=True)
-    train_dataset, val_dataset = dataset.build_image_couple_dataset(global_transforms, random_trans)
+    random_trans = random_transforms.RandomTransformForDeromedImages(flip=0.5, color_jitter=True, rotate=True, return_gt_image_percent=0.05)
+    train_dataset, val_dataset = dataset.build_image_couple_dataset(global_transforms, random_trans, x_dir='./dragon_ball_deformed/dragon_ball_preprocessed', y_dir='./dragon_ball_deformed/dragon_ball_gt')
     run_test(
         test_name="example",
         model=model,

@@ -88,6 +88,16 @@ class RandomTransform:
 
         return img, gt_img
 
+class RandomPosterize:
+
+    def __init__(self, min_bits=4):
+        self.bits = list(range(min_bits, 9))
+
+    def __call__(self, img, gt_img):
+        img = tf.posterize(img, random.choice(self.bits))
+        return img, gt_img
+
+
 class RandomTransformForDeromedImages:
 
     def __init__(self, flip=0.5, color_jitter=False, rotate=False, return_gt_image_percent=0.0):
@@ -116,7 +126,6 @@ class RandomTransformForDeromedImages:
         blur = random.choice(self.random_blurs)
         img = blur(img)
 
-        img = tf.posterize(img, random.choice(self.posterize_bits))
 
         if self.color_jitter:
             img = self.jitter_transform(img)

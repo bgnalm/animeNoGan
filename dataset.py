@@ -44,12 +44,13 @@ def build_video_datasets(videos, initial_transforms, info_loss_transforms, skip_
 
 class ImageCoupleDataset(Dataset):
 
-    def __init__(self, image_dir, gt_dir, transforms, random_transforms=None):
+    def __init__(self, image_dir, gt_dir, transforms, random_transforms=None, initial_transform=None):
         self.image_dir = image_dir
         self.gt_dir = gt_dir
         self.number_of_images = len(os.listdir(image_dir))
         self.transforms = transforms
         self.random_transforms = random_transforms
+        self.initial_transform = initial_transform
 
     def __len__(self):
         return self.number_of_images
@@ -57,6 +58,9 @@ class ImageCoupleDataset(Dataset):
     def __getitem__(self, idx):
         train_image = Image.open(os.path.join(self.image_dir, f'{idx}.jpg'))
         gt_image = Image.open(os.path.join(self.gt_dir, f'{idx}.jpg'))
+        if self.initial_transform is not None:
+            train_image, gt_image = self.initial_transform(train_image, gt_image)
+
         train_image = self.transforms(train_image)
         gt_image = self.transforms(gt_image)
         if self.random_transforms is not None:
