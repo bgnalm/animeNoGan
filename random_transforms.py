@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import torchvision.transforms.functional as tf
-from torchvision.transforms import ColorJitter, GaussianBlur, RandomErasing
+from torchvision.transforms import ColorJitter, GaussianBlur, RandomErasing, RandomAdjustSharpness
 from skimage.transform import PiecewiseAffineTransform, warp
 import random
 
@@ -77,6 +77,49 @@ class RandomTransform:
 
         for i in range(self.number_of_random_erases):
             img = self.random_erase(img)
+
+        if random.random() > self.rotate:
+            rotation = (random.random() - 0.5) * 10
+            img = tf.rotate(img, angle=rotation)
+            gt_img = tf.rotate(gt_img, angle=rotation)
+
+        if random.random() < self.return_gt_image_percent:
+            return gt_img, gt_img
+
+        return img, gt_img
+
+class RandomTransformForDeromedImages:
+
+    def __init__(self, flip=0.5, color_jitter=False, rotate=False, return_gt_image_percent=0.0):
+        self.flip = flip
+        self.color_jitter = color_jitter
+        self.rotate = rotate
+        self.return_gt_image_percent = return_gt_image_percent
+
+        self.jitter_transform = ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2)
+
+        self.random_blurs = [
+            RandomAdjustSharpness(sharpness_factor=1, p=0.0),
+            RandomAdjustSharpness(sharpness_factor=0.8, p=0.8),
+            RandomAdjustSharpness(sharpness_factor=0.6, p=0.8),
+            RandomAdjustSharpness(sharpness_factor=0.4, p=0.8),
+        ]
+
+        self.posterize_bits = [8, 7, 6, 5, 4]
+
+
+    def __call__(self, img, gt_img):
+        if random.random() < self.flip:
+            img = tf.hflip(img)
+            gt_img = tf.hflip(gt_img)
+
+        blur = random.choice(self.random_blurs)
+        img = blur(img)
+
+        img = tf.posterize(img, random.choice(self.posterize_bits))
+
+        if self.color_jitter:
+            img = self.jitter_transform(img)
 
         if random.random() > self.rotate:
             rotation = (random.random() - 0.5) * 10

@@ -65,17 +65,17 @@ class ImageCoupleDataset(Dataset):
         return train_image, gt_image
 
 
-def build_image_couple_dataset(transforms, random_transforms):
+def build_image_couple_dataset(transforms, random_transforms, x_dir='dragon_ball_preprocessed', y_dir='dragon_ball_gt'):
     train = ImageCoupleDataset(
-        os.path.join('dragon_ball_preprocessed', 'train'),
-        os.path.join('dragon_ball_gt', 'train'),
+        os.path.join(x_dir, 'train'),
+        os.path.join(y_dir, 'train'),
         transforms=transforms,
         random_transforms=random_transforms
     )
 
     val = ImageCoupleDataset(
-        os.path.join('dragon_ball_preprocessed', 'val'),
-        os.path.join('dragon_ball_gt', 'val'),
+        os.path.join(x_dir, 'val'),
+        os.path.join(y_dir, 'val'),
         transforms=transforms
     )
 

@@ -5,6 +5,7 @@ import time
 
 import matplotlib.pyplot as plt
 import torch
+from skimage.transform import PiecewiseAffineTransform, warp
 from sklearn.cluster import KMeans
 import numpy as np
 import random
@@ -208,13 +209,88 @@ def fix_train_val():
 
 
 
+def deform_image(image, interpolation_points=15, std=5):
+    rows, cols = image.shape[0], image.shape[1]
+
+    src_cols = np.linspace(0, cols, interpolation_points)
+    src_rows = np.linspace(0, rows, interpolation_points)
+    src_rows, src_cols = np.meshgrid(src_rows, src_cols)
+    src = np.dstack([src_cols.flat, src_rows.flat])[0]
+
+    dst = src + np.random.normal(0, std, src.shape)
+    tform = PiecewiseAffineTransform()
+    tform.estimate(src, dst)
+    out = warp(image, tform, output_shape=(rows, cols))
+    return (out * 255).astype(int)
+
+@ignore_warnings(category=ConvergenceWarning)
+def vid_gen(vid_path, intro_outro_percentage=0.075, skip_factor=15, new_size=224):
+    capture = cv2.VideoCapture(vid_path)
+    success, frame = capture.read()
+
+    number_of_frames = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
+    intro_outro_frames = int(number_of_frames * intro_outro_percentage)
+    for i in range(intro_outro_frames):
+        success, frame = capture.read()
+
+    for i in tqdm(range(number_of_frames - (2 * intro_outro_frames))):
+        if i % skip_factor == 0:
+            new_image = np.array(Image.fromarray(frame).resize((new_size, new_size)))
+            new_image = cv2.cvtColor(new_image, cv2.COLOR_BGR2RGB)
+            new_image = Image.fromarray(new_image)
+            yield new_image
+
+        success, frame = capture.read()
+
+    capture.release()
+
+def preprocess(to, val_factor=17, operation=deform_image):
+    all_vids = os.listdir('./dragon ball/')
+
+    current_counter = 0
+    train_counter = 0
+    val_counter = 0
+
+    train_path = os.path.join(to, 'dragon_ball_preprocessed', 'train', '{0}.jpg')
+    train_gt_path = os.path.join(to, 'dragon_ball_gt', 'train', '{0}.jpg')
+    val_path = os.path.join(to, 'dragon_ball_preprocessed', 'val', '{0}.jpg')
+    val_gt_path = os.path.join(to, 'dragon_ball_gt', 'val', '{0}.jpg')
+
+    pbar = tqdm(total=26000, leave=True)
+    for vid in all_vids:
+        for frame in vid_gen(os.path.join('./dragon ball', vid)):
+            # perform preprocessing
+            frame = np.array(frame)
+            deformed_frame = operation(frame)
+
+            if current_counter % val_factor == 0:
+                out_path = val_path.format(val_counter)
+                out_gt_path = val_gt_path.format(val_counter)
+                val_counter += 1
+            else:
+                out_path = train_path.format(train_counter)
+                out_gt_path = train_gt_path.format(train_counter)
+                train_counter += 1
+
+            Image.fromarray(deformed_frame.astype(np.uint8)).save(out_path)
+            Image.fromarray(frame).save(out_gt_path)
+            current_counter += 1
+            pbar.update(1)
+
+    pbar.close()
+
+
+
 if __name__ == '__main__':
-    source = "./dragon ball"
-    dest = './dragon_ball_preprocessed'
-    files = os.listdir(source)
-    first_index = 0
-    for f in files:
-        first_index = preprocess_video_to_images(os.path.join(source, f), dest, 224, first_index=first_index)
+    if False: # case 1
+        source = "./dragon ball"
+        dest = './dragon_ball_preprocessed'
+        files = os.listdir(source)
+        first_index = 0
+        for f in files:
+            first_index = preprocess_video_to_images(os.path.join(source, f), dest, 224, first_index=first_index)
+    else:
+        preprocess(to='dragon_ball_deformed', val_factor=17, operation=deform_image)
 
 
 
