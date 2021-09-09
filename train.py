@@ -137,7 +137,10 @@ class Trainer:
                 new_input = input.reshape(1, *input.shape)
                 out = self.model(new_input)
                 out_cpu = out.cpu()
-                out_normalized = self._unnormalize_output_image(out_cpu)
+                if unnormalize:
+                    out_normalized = self._unnormalize_output_image(out_cpu)
+                else:
+                    out_normalized = out_cpu
                 out_normalized = out_normalized.permute(0, 2, 3, 1)
                 array = np.array(out_normalized)
                 out_image = array[0]
