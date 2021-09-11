@@ -53,6 +53,7 @@ def loss_function(recon_x, x, mu, logvar):
 class VAELoss(torch.nn.Module):
 
     def __init__(self):
+        super(VAELoss, self).__init__()
         self.reconstruction_function = torch.nn.BCELoss()
 
     def forward(self, network_out, x):
