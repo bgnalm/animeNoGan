@@ -129,4 +129,8 @@ class VAE(nn.Module):
 
 def get_vae():
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    return VAE(nc=3, ngf=128, ndf=128, latent_variable_size=500, device=device)
+    model = VAE(nc=3, ngf=128, ndf=128, latent_variable_size=500, device=device)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    model.eval()
+    return model
