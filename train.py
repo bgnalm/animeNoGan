@@ -137,7 +137,7 @@ class Trainer:
                 new_input = input.reshape(1, *input.shape)
                 out = self.model(new_input)
                 if vae:
-                    out_cpu[0] = out.cpu()
+                    out_cpu = out[0].cpu()
                 else:
                     out_cpu = out.cpu()
                 if unnormalize:
