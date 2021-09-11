@@ -127,7 +127,7 @@ class Trainer:
         x[:, 2, :, :] = img[:, 2, :, :] * std[2] + mean[2]
         return x
 
-    def calculate_example_images(self, outdir, global_transform, unnormalize=False):
+    def calculate_example_images(self, outdir, global_transform, unnormalize=False, vae=False):
         d = dataset.ExampleImagesDataset(global_transform)
         self.model.eval()  # evaluation mode
 
@@ -136,7 +136,10 @@ class Trainer:
             with torch.no_grad():
                 new_input = input.reshape(1, *input.shape)
                 out = self.model(new_input)
-                out_cpu = out.cpu()
+                if vae:
+                    out_cpu[0] = out.cpu()
+                else:
+                    out_cpu = out.cpu()
                 out_normalized = self._unnormalize_output_image(out_cpu)
                 out_normalized = out_normalized.permute(0, 2, 3, 1)
                 array = np.array(out_normalized)
