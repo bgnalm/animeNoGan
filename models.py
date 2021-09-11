@@ -113,7 +113,10 @@ class VAE(nn.Module):
         h4 = self.leakyrelu(self.bn8(self.d4(self.pd3(self.up3(h3)))))
         h5 = self.leakyrelu(self.bn9(self.d5(self.pd4(self.up4(h4)))))
 
-        return self.sigmoid(self.d6(self.pd5(self.up5(h5))))
+        out = self.sigmoid(self.d6(self.pd5(self.up5(h5))))
+        if torch.isnan(out).sum() > 1:
+            a = 1
+        return out
 
     def get_latent_var(self, x):
         mu, logvar = self.encode(x.view(-1, self.nc, self.ndf, self.ngf))
@@ -123,6 +126,7 @@ class VAE(nn.Module):
     def forward(self, x):
         mu, logvar = self.encode(x.view(-1, self.nc, self.ndf, self.ngf))
         z = self.reparametrize(mu, logvar)
+        z = z.clamp(min=-1e7, max=1e7)
         res = self.decode(z)
         return res, mu, logvar
 

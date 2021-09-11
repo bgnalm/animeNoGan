@@ -9,6 +9,7 @@ import train
 import csv
 import os
 import time
+import criterions
 
 
 def save_data(filepath, train_loss, val_loss):
@@ -67,22 +68,26 @@ val_episode = [
 ]
 
 if __name__ == '__main__':
-    model = models.get_model('resnet34')
-    global_transforms = transforms.Compose([transforms.ToTensor()])
-    random_trans = random_transforms.RandomTransformForDeromedImages(flip=0.5, color_jitter=True, rotate=True, return_gt_image_percent=0.05)
-    train_dataset, val_dataset = dataset.build_image_couple_dataset(global_transforms, random_trans, x_dir='./dragon_ball_deformed/dragon_ball_preprocessed', y_dir='./dragon_ball_deformed/dragon_ball_gt')
+    model = models.get_vae()
+    # model.load_state_dict(torch.load('../../gdrive/MyDrive/anime/cpu_Epoch_28_Train_loss_25425.9503_Test_loss_25172.4120.pth'))
+    model.eval()
+    global_transforms = transforms.Compose([transforms.Resize((128, 128)), transforms.ToTensor()])
+    random_trans = random_transforms.RandomTransform(flip=0.5, rotate=0.1, color_jitter=True, blur_operations_avg=0.5, return_gt_image_percent=0.03)
+    inference_transform = transforms.Compose([transforms.Resize((128, 128)), transforms.ToTensor()])
+    train_dataset, val_dataset = dataset.build_image_couple_dataset(global_transforms, random_trans)
     run_test(
-        test_name="example",
+        test_name="vae_with_augmentation",
         model=model,
-        criterion=torch.nn.L1Loss(),
-        optimizer=torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9),
+        criterion=criterions.VAELoss(),
+        optimizer=torch.optim.SGD(model.parameters(), lr=0.0001, momentum=0.9),
         train_dataloader=DataLoader(train_dataset, batch_size=4, shuffle=True),
         val_dataloader=DataLoader(val_dataset, batch_size=4, shuffle=True),
         lr_scheduler=None,
-        global_transform=global_transforms,
-        epochs=10,
+        global_transform=inference_transform,
+        epochs=5,
         notebook=False,
-        outdir=OUTPUT_DIR
+        unnormalize=False,
+        vae=True
     )
 
 
