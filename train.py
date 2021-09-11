@@ -143,7 +143,8 @@ class Trainer:
                 if unnormalize:
                     out_normalized = self._unnormalize_output_image(out_cpu)
                 else:
-                    out_normalized = out_cpu                out_normalized = out_normalized.permute(0, 2, 3, 1)
+                    out_normalized = out_cpu
+                out_normalized = out_normalized.permute(0, 2, 3, 1)
                 array = np.array(out_normalized)
                 out_image = array[0]
                 out_image = (out_image * 255.0).astype('uint8')
